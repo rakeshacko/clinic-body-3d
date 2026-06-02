@@ -223,24 +223,27 @@ export function computeSystemFit(
   const yOffset = (height - 1) * 0.16 * tuning.placementResponse;
   const pelvisOffset = (height - 1) * -0.08 * tuning.placementResponse;
   const abdomenForward = (p.centrality - 0.5) * 0.035 * tuning.placementResponse;
+  const internalDepthOffset = -0.11 * tuning.placementResponse;
+  const pelvisDepthOffset = -0.18 * tuning.placementResponse;
+  const headDepthOffset = -0.2 * tuning.placementResponse;
 
   switch (systemId) {
     case "cardiovascular":
-      return { position: [0, yOffset - 0.02, 0], scale: [torsoX * 0.92, height * 0.86, chestDepth * 0.9] };
+      return { position: [0, yOffset - 0.02, internalDepthOffset], scale: [torsoX * 0.92, height * 0.86, chestDepth * 0.9] };
     case "respiratory":
-      return { position: [0, yOffset - 0.07, 0], scale: [torsoX * 0.94, torsoY * 0.78, chestDepth * 0.92] };
+      return { position: [0, yOffset - 0.07, internalDepthOffset], scale: [torsoX * 0.94, torsoY * 0.78, chestDepth * 0.92] };
     case "digestive":
       return {
-        position: [0, pelvisOffset - 0.005, abdomenForward],
+        position: [0, pelvisOffset - 0.005, internalDepthOffset + abdomenForward],
         scale: [Math.max(torsoX, hipX), torsoY * height, abdomenDepth],
       };
     case "endocrine":
-      return { position: [0, yOffset, 0], scale: [torsoX, height, chestDepth] };
+      return { position: [0, yOffset, internalDepthOffset], scale: [torsoX, height, chestDepth] };
     case "urinary":
-      return { position: [0, pelvisOffset - 0.015, abdomenForward * 0.4], scale: [hipX, height * 0.98, abdomenDepth] };
+      return { position: [0, pelvisOffset - 0.015, pelvisDepthOffset + abdomenForward * 0.4], scale: [hipX, height * 0.98, abdomenDepth] };
     case "nervous":
-      return { position: [0, yOffset - 0.01, 0], scale: [height * 0.9, height * 0.96, height * 0.9] };
+      return { position: [0, yOffset - 0.01, headDepthOffset], scale: [height * 0.9, height * 0.96, height * 0.9] };
     case "skeletal":
-      return { position: [0, 0, 0], scale: [torsoX * 0.8, height * 0.95, chestDepth * 0.8] };
+      return { position: [0, 0, pelvisDepthOffset], scale: [torsoX * 0.8, height * 0.95, chestDepth * 0.8] };
   }
 }

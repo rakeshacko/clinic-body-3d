@@ -99,9 +99,27 @@ function geometryFromAnny(facesBuffer: ArrayBuffer, verticesBuffer: ArrayBuffer)
     minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
   }
 
-  const cx = (minX + maxX) / 2;
+  const torsoXs: number[] = [];
+  const torsoZs: number[] = [];
+  const lowTorso = minY + (maxY - minY) * 0.25;
+  const highTorso = minY + (maxY - minY) * 0.8;
+  for (let i = 0; i < converted.length; i += 3) {
+    const y = converted[i + 1];
+    if (y >= lowTorso && y <= highTorso) {
+      torsoXs.push(converted[i]);
+      torsoZs.push(converted[i + 2]);
+    }
+  }
+
+  const median = (values: number[], fallback: number) => {
+    if (values.length === 0) return fallback;
+    const sorted = [...values].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)];
+  };
+
+  const cx = median(torsoXs, (minX + maxX) / 2);
   const cy = (minY + maxY) / 2 + 0.02;
-  const cz = (minZ + maxZ) / 2;
+  const cz = median(torsoZs, (minZ + maxZ) / 2);
   for (let i = 0; i < converted.length; i += 3) {
     converted[i] -= cx;
     converted[i + 1] -= cy;

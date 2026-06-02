@@ -174,21 +174,24 @@ def compute_system_fit(system_id: str, params: dict[str, float], tuning: dict[st
     y_offset = (height - 1.0) * 0.16 * tuning["placementResponse"]
     pelvis_offset = (height - 1.0) * -0.08 * tuning["placementResponse"]
     abdomen_forward = (p["centrality"] - 0.5) * 0.035 * tuning["placementResponse"]
+    internal_depth_offset = -0.11 * tuning["placementResponse"]
+    pelvis_depth_offset = -0.18 * tuning["placementResponse"]
+    head_depth_offset = -0.2 * tuning["placementResponse"]
 
     if system_id == "cardiovascular":
-        return Transform((0.0, y_offset - 0.02, 0.0), (torso_x * 0.92, height * 0.86, chest_depth * 0.9))
+        return Transform((0.0, y_offset - 0.02, internal_depth_offset), (torso_x * 0.92, height * 0.86, chest_depth * 0.9))
     if system_id == "respiratory":
-        return Transform((0.0, y_offset - 0.07, 0.0), (torso_x * 0.94, torso_y * 0.78, chest_depth * 0.92))
+        return Transform((0.0, y_offset - 0.07, internal_depth_offset), (torso_x * 0.94, torso_y * 0.78, chest_depth * 0.92))
     if system_id == "digestive":
-        return Transform((0.0, pelvis_offset - 0.005, abdomen_forward), (max(torso_x, hip_x), torso_y * height, abdomen_depth))
+        return Transform((0.0, pelvis_offset - 0.005, internal_depth_offset + abdomen_forward), (max(torso_x, hip_x), torso_y * height, abdomen_depth))
     if system_id == "endocrine":
-        return Transform((0.0, y_offset, 0.0), (torso_x, height, chest_depth))
+        return Transform((0.0, y_offset, internal_depth_offset), (torso_x, height, chest_depth))
     if system_id == "urinary":
-        return Transform((0.0, pelvis_offset - 0.015, abdomen_forward * 0.4), (hip_x, height * 0.98, abdomen_depth))
+        return Transform((0.0, pelvis_offset - 0.015, pelvis_depth_offset + abdomen_forward * 0.4), (hip_x, height * 0.98, abdomen_depth))
     if system_id == "nervous":
-        return Transform((0.0, y_offset - 0.01, 0.0), (height * 0.9, height * 0.96, height * 0.9))
+        return Transform((0.0, y_offset - 0.01, head_depth_offset), (height * 0.9, height * 0.96, height * 0.9))
     if system_id == "skeletal":
-        return Transform((0.0, 0.0, 0.0), (torso_x * 0.8, height * 0.95, chest_depth * 0.8))
+        return Transform((0.0, 0.0, pelvis_depth_offset), (torso_x * 0.8, height * 0.95, chest_depth * 0.8))
     raise ValueError(system_id)
 
 
@@ -246,9 +249,20 @@ def fetch_anny_vertices(params: dict[str, float]) -> list[tuple[float, float, fl
         min_y, max_y = min(min_y, y), max(max_y, y)
         min_z, max_z = min(min_z, z), max(max_z, z)
 
-    cx = (min_x + max_x) / 2.0
+    low_torso = min_y + (max_y - min_y) * 0.25
+    high_torso = min_y + (max_y - min_y) * 0.8
+    torso = [(x, z) for x, y, z in verts if low_torso <= y <= high_torso]
+    torso_x = sorted(x for x, _ in torso)
+    torso_z = sorted(z for _, z in torso)
+
+    def median(values: list[float], fallback: float) -> float:
+        if not values:
+            return fallback
+        return values[len(values) // 2]
+
+    cx = median(torso_x, (min_x + max_x) / 2.0)
     cy = (min_y + max_y) / 2.0 + 0.02
-    cz = (min_z + max_z) / 2.0
+    cz = median(torso_z, (min_z + max_z) / 2.0)
     return [(x - cx, y - cy, z - cz) for x, y, z in verts]
 
 

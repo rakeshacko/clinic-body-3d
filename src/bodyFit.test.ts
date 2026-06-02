@@ -60,7 +60,7 @@ describe("body fit", () => {
         const fit = computeSystemFit(system, preset.params, DEFAULT_ORGAN_FIT);
         expect(Math.max(...fit.scale)).toBeLessThanOrEqual(1.25);
         expect(Math.min(...fit.scale)).toBeGreaterThanOrEqual(0.7);
-        expect(Math.max(...fit.position.map(Math.abs))).toBeLessThanOrEqual(0.1);
+        expect(Math.max(...fit.position.map(Math.abs))).toBeLessThanOrEqual(0.21);
       }
     }
   });
