@@ -6,6 +6,7 @@ import { Legend } from "./ui/Legend";
 import { DetailPanel } from "./ui/DetailPanel";
 import { Credits } from "./ui/Credits";
 import { Loader } from "./ui/Loader";
+import { BodyFitPanel } from "./ui/BodyFitPanel";
 import { DEFAULT_MEMBER_ID, useActiveSystem, useAppStore } from "./store";
 import { usePresenter } from "./presenter/usePresenter";
 
@@ -29,6 +30,7 @@ export function App() {
         {view === "overview" ? <Legend /> : activeSystem && <DetailPanel system={activeSystem} />}
       </aside>
       <Controls />
+      <BodyFitPanel />
       <Credits />
       <Loader />
     </div>

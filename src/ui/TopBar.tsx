@@ -7,6 +7,7 @@ export function TopBar() {
   const presenter = usePresenter("wall");
   const payload = useAppStore((s) => s.payload);
   const toggleCredits = useAppStore((s) => s.toggleCredits);
+  const toggleBodyFit = useAppStore((s) => s.toggleBodyFit);
 
   return (
     <div className="topbar">
@@ -35,6 +36,7 @@ export function TopBar() {
             </select>
           )}
         </div>
+        <button className="icon-btn" onClick={() => toggleBodyFit(true)}>Body fit</button>
         <button className="icon-btn" onClick={() => toggleCredits(true)}>Credits</button>
       </div>
     </div>

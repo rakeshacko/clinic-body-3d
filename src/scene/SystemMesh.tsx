@@ -5,6 +5,7 @@ import { Mesh, MeshStandardMaterial } from "three";
 import type { SystemState } from "../scoring/types";
 import { useAppStore } from "../store";
 import { emissiveIntensity, statusColor } from "./colors";
+import type { SystemFitTransform } from "../bodyFit";
 
 interface Props {
   system: SystemState;
@@ -13,6 +14,7 @@ interface Props {
   presence: "overview" | "focus" | "dim";
   /** Position in the reveal cascade (presentation order). */
   revealIndex: number;
+  fit: SystemFitTransform;
 }
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -20,7 +22,7 @@ const SHELL_DELAY = 0.5;
 const STAGGER = 0.13;
 const RAMP = 0.6;
 
-export function SystemMesh({ system, model, presence, revealIndex }: Props) {
+export function SystemMesh({ system, model, presence, revealIndex, fit }: Props) {
   const { scene } = useGLTF(model);
   const matRef = useRef<MeshStandardMaterial | null>(null);
   const revealRef = useRef(0);
@@ -78,7 +80,7 @@ export function SystemMesh({ system, model, presence, revealIndex }: Props) {
   });
 
   return (
-    <group>
+    <group position={fit.position} scale={fit.scale}>
       <primitive object={cloned} />
     </group>
   );

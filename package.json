@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit",
+    "verify:body-fit": "/Applications/Blender.app/Contents/MacOS/Blender -b --python scripts/verify_body_fit.py",
     "assets:build": "cd asset-pipeline && bash 01_fetch.sh && python3 02_audit_licenses.py && /Applications/Blender.app/Contents/MacOS/Blender -b -P 03_build_glb.py && /Applications/Blender.app/Contents/MacOS/Blender -b -P 03b_build_shells.py && python3 04_validate.py",
     "assets:shells": "cd asset-pipeline && /Applications/Blender.app/Contents/MacOS/Blender -b -P 03b_build_shells.py",
     "relay": "tsx server/remote-relay.ts"

@@ -47,6 +47,7 @@ Supported variables:
 VITE_DATA_SOURCE=mock
 VITE_REMOTE=
 VITE_RELAY_URL=ws://localhost:8787
+VITE_ANNY_URL=http://localhost:8765
 ```
 
 `VITE_DATA_SOURCE=mock` uses the bundled demo members in `src/data/mock/members.ts`.
@@ -56,6 +57,7 @@ VITE_RELAY_URL=ws://localhost:8787
 ```bash
 npm test
 npm run typecheck
+npm run verify:body-fit
 npm run build
 npm run preview
 ```
@@ -64,6 +66,8 @@ Command notes:
 
 - `npm test` runs the scoring engine tests.
 - `npm run typecheck` runs TypeScript without emitting files.
+- `npm run verify:body-fit` uses Blender plus the local Anny server to check that fitted
+  organ/system GLBs remain inside representative Anny shell presets.
 - `npm run build` creates the production build in `dist/`.
 - `npm run preview` serves the production build locally.
 
@@ -93,6 +97,10 @@ Open:
 http://localhost:8765/
 ```
 
+When the main app's **Body fit** panel has "Anny shell" enabled, it fetches the generated
+outer-body mesh from `VITE_ANNY_URL`. If the Anny server is not running, the app falls back
+to the bundled static GLB shell.
+
 It serves:
 
 ```txt
@@ -111,6 +119,15 @@ Regenerate fitted DXA-to-Anny parameters:
 ```
 
 Details of the mapping are documented in `docs/DXA_TO_ANNY_MAPPING.md`.
+
+## Body and Organ Fit Assumptions
+
+The body-fit panel exposes Anny-style controls for sex shape, age, height, adiposity, muscle,
+proportions, torso, abdomen, hips, and central fat. These controls are meant for visual fitting.
+
+Internal organ/system meshes respond primarily to height, torso/ribcage dimensions, pelvis/hip
+position, and abdomen placement. Adiposity and muscle mostly affect the outer shell. They should
+not be interpreted as direct organ enlargement controls.
 
 ## Asset Pipeline
 

@@ -8,11 +8,14 @@ import { Lighting } from "./Lighting";
 import { PostFX } from "./PostFX";
 import { BodyShell } from "./BodyShell";
 import { SystemMesh } from "./SystemMesh";
+import { computeSystemFit } from "../bodyFit";
 
 function Systems() {
   const systems = useAppStore((s) => s.systems);
   const view = useAppStore((s) => s.view);
   const activeIndex = useAppStore((s) => s.activeIndex);
+  const bodyFit = useAppStore((s) => s.bodyFit);
+  const organFit = useAppStore((s) => s.organFit);
 
   return (
     <>
@@ -26,6 +29,7 @@ function Systems() {
             model={SYSTEM_PRESENTATION[system.id].model}
             presence={presence}
             revealIndex={i}
+            fit={computeSystemFit(system.id, bodyFit, organFit)}
           />
         );
       })}
