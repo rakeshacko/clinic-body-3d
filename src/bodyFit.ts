@@ -224,6 +224,7 @@ export function computeSystemFit(
   const pelvisOffset = (height - 1) * -0.08 * tuning.placementResponse;
   const abdomenForward = (p.centrality - 0.5) * 0.035 * tuning.placementResponse;
   const internalDepthOffset = -0.11 * tuning.placementResponse;
+  const digestiveDepthOffset = -0.185 * tuning.placementResponse;
   const pelvisDepthOffset = -0.18 * tuning.placementResponse;
   const headDepthOffset = -0.2 * tuning.placementResponse;
 
@@ -234,8 +235,8 @@ export function computeSystemFit(
       return { position: [0, yOffset - 0.07, internalDepthOffset], scale: [torsoX * 0.94, torsoY * 0.78, chestDepth * 0.92] };
     case "digestive":
       return {
-        position: [0, pelvisOffset - 0.005, internalDepthOffset + abdomenForward],
-        scale: [Math.max(torsoX, hipX), torsoY * height, abdomenDepth],
+        position: [0, pelvisOffset - 0.005, digestiveDepthOffset + abdomenForward * 0.35],
+        scale: [Math.max(torsoX, hipX) * 0.8, torsoY * height * 0.96, abdomenDepth * 0.72],
       };
     case "endocrine":
       return { position: [0, yOffset, internalDepthOffset], scale: [torsoX, height, chestDepth] };

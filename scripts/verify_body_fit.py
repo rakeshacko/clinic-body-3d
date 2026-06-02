@@ -175,6 +175,7 @@ def compute_system_fit(system_id: str, params: dict[str, float], tuning: dict[st
     pelvis_offset = (height - 1.0) * -0.08 * tuning["placementResponse"]
     abdomen_forward = (p["centrality"] - 0.5) * 0.035 * tuning["placementResponse"]
     internal_depth_offset = -0.11 * tuning["placementResponse"]
+    digestive_depth_offset = -0.185 * tuning["placementResponse"]
     pelvis_depth_offset = -0.18 * tuning["placementResponse"]
     head_depth_offset = -0.2 * tuning["placementResponse"]
 
@@ -183,7 +184,10 @@ def compute_system_fit(system_id: str, params: dict[str, float], tuning: dict[st
     if system_id == "respiratory":
         return Transform((0.0, y_offset - 0.07, internal_depth_offset), (torso_x * 0.94, torso_y * 0.78, chest_depth * 0.92))
     if system_id == "digestive":
-        return Transform((0.0, pelvis_offset - 0.005, internal_depth_offset + abdomen_forward), (max(torso_x, hip_x), torso_y * height, abdomen_depth))
+        return Transform(
+            (0.0, pelvis_offset - 0.005, digestive_depth_offset + abdomen_forward * 0.35),
+            (max(torso_x, hip_x) * 0.8, torso_y * height * 0.96, abdomen_depth * 0.72),
+        )
     if system_id == "endocrine":
         return Transform((0.0, y_offset, internal_depth_offset), (torso_x, height, chest_depth))
     if system_id == "urinary":
