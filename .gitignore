@@ -1,0 +1,15 @@
+node_modules
+dist
+.DS_Store
+*.tsbuildinfo
+*.local
+.env
+.env.*
+!.env.example
+
+# Asset pipeline source clones are large and license-tracked separately.
+asset-pipeline/sources/
+
+# Generated audit artifacts are reproducible from the pipeline.
+asset-pipeline/LICENSE-AUDIT.md
+asset-pipeline/ATTRIBUTION.md

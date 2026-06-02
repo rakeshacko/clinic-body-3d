@@ -1,0 +1,21 @@
+:root {
+  /* Typography — distinctive display serif + clean grotesque body. */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Familjen Grotesk", "Segoe UI", sans-serif;
+
+  /* Status tokens — consumed by CSS and read into 3D materials at runtime. */
+  --status-healthy: #2fd6a8;
+  --status-attention: #f3b34e;
+  --status-flag: #f05a4f;
+  --status-neutral: #5d7184;
+
+  /* Scene / surface palette — calm, premium, clinical-but-warm. */
+  --bg-core: #0c151c;
+  --bg-edge: #05090d;
+  --panel: rgba(16, 26, 34, 0.72);
+  --panel-border: rgba(120, 160, 180, 0.16);
+  --ink: #eaf2f4;
+  --ink-dim: #9fb2bc;
+  --ink-faint: #64798a;
+  --accent: #d8c4a0;
+}

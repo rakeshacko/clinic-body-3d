@@ -1,0 +1,149 @@
+{
+  "note": "Demo DXA-style regional body-composition payloads for validating the Anny body preview. These are plausible synthetic samples, not clinical records.",
+  "members": [
+    {
+      "memberId": "male-lean-older",
+      "profile": { "ageYears": 57, "sex": "male", "heightCm": 173.5, "weightKg": 70.8, "bmi": 23.5 },
+      "source": "Synthetic DXA-style demo sample",
+      "bodyComposition": {
+        "total": { "fatMassG": 14976, "leanMassG": 53377, "percentFat": 21.2 },
+        "regions": {
+          "head": { "fatMassG": 1262, "leanMassG": 3476, "percentFat": 24.2 },
+          "left_arm": { "fatMassG": 681, "leanMassG": 3280, "percentFat": 16.4 },
+          "right_arm": { "fatMassG": 684, "leanMassG": 3473, "percentFat": 15.7 },
+          "trunk": { "fatMassG": 9263, "leanMassG": 25295, "percentFat": 26.3 },
+          "left_leg": { "fatMassG": 1498, "leanMassG": 8748, "percentFat": 14.0 },
+          "right_leg": { "fatMassG": 1587, "leanMassG": 9104, "percentFat": 14.2 }
+        }
+      }
+    },
+    {
+      "memberId": "male-athletic",
+      "profile": { "ageYears": 29, "sex": "male", "heightCm": 182.0, "weightKg": 78.0, "bmi": 23.5 },
+      "source": "Synthetic DXA-style demo sample",
+      "bodyComposition": {
+        "total": { "fatMassG": 12000, "leanMassG": 63200, "percentFat": 15.4 },
+        "regions": {
+          "head": { "fatMassG": 950, "leanMassG": 3820, "percentFat": 19.9 },
+          "left_arm": { "fatMassG": 650, "leanMassG": 4550, "percentFat": 12.5 },
+          "right_arm": { "fatMassG": 680, "leanMassG": 4760, "percentFat": 12.5 },
+          "trunk": { "fatMassG": 5350, "leanMassG": 28800, "percentFat": 15.7 },
+          "left_leg": { "fatMassG": 2150, "leanMassG": 10650, "percentFat": 16.8 },
+          "right_leg": { "fatMassG": 2220, "leanMassG": 10820, "percentFat": 17.0 }
+        }
+      }
+    },
+    {
+      "memberId": "male-central-adiposity",
+      "profile": { "ageYears": 52, "sex": "male", "heightCm": 175.0, "weightKg": 95.0, "bmi": 31.0 },
+      "source": "Synthetic DXA-style demo sample",
+      "bodyComposition": {
+        "total": { "fatMassG": 28200, "leanMassG": 63000, "percentFat": 29.7 },
+        "regions": {
+          "head": { "fatMassG": 1240, "leanMassG": 3700, "percentFat": 25.1 },
+          "left_arm": { "fatMassG": 1440, "leanMassG": 4000, "percentFat": 26.5 },
+          "right_arm": { "fatMassG": 1510, "leanMassG": 4200, "percentFat": 26.4 },
+          "trunk": { "fatMassG": 16650, "leanMassG": 31000, "percentFat": 34.9 },
+          "left_leg": { "fatMassG": 3600, "leanMassG": 9850, "percentFat": 26.8 },
+          "right_leg": { "fatMassG": 3760, "leanMassG": 10250, "percentFat": 26.8 }
+        }
+      }
+    },
+    {
+      "memberId": "male-high-bmi",
+      "profile": { "ageYears": 19, "sex": "male", "heightCm": 179.0, "weightKg": 112.0, "bmi": 35.0 },
+      "source": "Synthetic DXA-style demo sample",
+      "bodyComposition": {
+        "total": { "fatMassG": 36092, "leanMassG": 73469, "percentFat": 32.0 },
+        "regions": {
+          "head": { "fatMassG": 1423, "leanMassG": 3852, "percentFat": 24.4 },
+          "left_arm": { "fatMassG": 2266, "leanMassG": 4360, "percentFat": 32.9 },
+          "right_arm": { "fatMassG": 2271, "leanMassG": 4893, "percentFat": 30.6 },
+          "trunk": { "fatMassG": 15815, "leanMassG": 36622, "percentFat": 29.7 },
+          "left_leg": { "fatMassG": 6930, "leanMassG": 11412, "percentFat": 36.6 },
+          "right_leg": { "fatMassG": 7387, "leanMassG": 12330, "percentFat": 36.3 }
+        }
+      }
+    },
+    {
+      "memberId": "female-lean",
+      "profile": { "ageYears": 32, "sex": "female", "heightCm": 164.0, "weightKg": 56.0, "bmi": 20.8 },
+      "source": "Synthetic DXA-style demo sample",
+      "bodyComposition": {
+        "total": { "fatMassG": 14600, "leanMassG": 38800, "percentFat": 26.1 },
+        "regions": {
+          "head": { "fatMassG": 980, "leanMassG": 3300, "percentFat": 22.9 },
+          "left_arm": { "fatMassG": 760, "leanMassG": 2100, "percentFat": 26.6 },
+          "right_arm": { "fatMassG": 790, "leanMassG": 2200, "percentFat": 26.4 },
+          "trunk": { "fatMassG": 6750, "leanMassG": 20200, "percentFat": 25.0 },
+          "left_leg": { "fatMassG": 2630, "leanMassG": 5350, "percentFat": 33.0 },
+          "right_leg": { "fatMassG": 2690, "leanMassG": 5650, "percentFat": 32.3 }
+        }
+      }
+    },
+    {
+      "memberId": "female-average",
+      "profile": { "ageYears": 45, "sex": "female", "heightCm": 162.0, "weightKg": 70.0, "bmi": 26.7 },
+      "source": "Synthetic DXA-style demo sample",
+      "bodyComposition": {
+        "total": { "fatMassG": 25000, "leanMassG": 42000, "percentFat": 35.7 },
+        "regions": {
+          "head": { "fatMassG": 1150, "leanMassG": 3250, "percentFat": 26.1 },
+          "left_arm": { "fatMassG": 1350, "leanMassG": 2400, "percentFat": 36.0 },
+          "right_arm": { "fatMassG": 1420, "leanMassG": 2550, "percentFat": 35.8 },
+          "trunk": { "fatMassG": 12250, "leanMassG": 21500, "percentFat": 36.3 },
+          "left_leg": { "fatMassG": 4350, "leanMassG": 6100, "percentFat": 41.6 },
+          "right_leg": { "fatMassG": 4480, "leanMassG": 6200, "percentFat": 41.9 }
+        }
+      }
+    },
+    {
+      "memberId": "female-lower-body",
+      "profile": { "ageYears": 41, "sex": "female", "heightCm": 166.0, "weightKg": 82.0, "bmi": 29.8 },
+      "source": "Synthetic DXA-style demo sample",
+      "bodyComposition": {
+        "total": { "fatMassG": 31900, "leanMassG": 47000, "percentFat": 38.9 },
+        "regions": {
+          "head": { "fatMassG": 1200, "leanMassG": 3350, "percentFat": 26.4 },
+          "left_arm": { "fatMassG": 1540, "leanMassG": 2850, "percentFat": 35.1 },
+          "right_arm": { "fatMassG": 1620, "leanMassG": 3000, "percentFat": 35.1 },
+          "trunk": { "fatMassG": 13340, "leanMassG": 23600, "percentFat": 36.1 },
+          "left_leg": { "fatMassG": 7020, "leanMassG": 7050, "percentFat": 49.9 },
+          "right_leg": { "fatMassG": 7180, "leanMassG": 7150, "percentFat": 50.1 }
+        }
+      }
+    },
+    {
+      "memberId": "female-high-adiposity",
+      "profile": { "ageYears": 36, "sex": "female", "heightCm": 168.7, "weightKg": 111.3, "bmi": 39.1 },
+      "source": "Synthetic DXA-style demo sample",
+      "bodyComposition": {
+        "total": { "fatMassG": 48147, "leanMassG": 61542, "percentFat": 42.8 },
+        "regions": {
+          "head": { "fatMassG": 1265, "leanMassG": 3357, "percentFat": 24.4 },
+          "left_arm": { "fatMassG": 2490, "leanMassG": 2734, "percentFat": 45.9 },
+          "right_arm": { "fatMassG": 2834, "leanMassG": 3272, "percentFat": 45.0 },
+          "trunk": { "fatMassG": 27292, "leanMassG": 34033, "percentFat": 43.9 },
+          "left_leg": { "fatMassG": 7162, "leanMassG": 8980, "percentFat": 43.1 },
+          "right_leg": { "fatMassG": 7104, "leanMassG": 9166, "percentFat": 42.4 }
+        }
+      }
+    },
+    {
+      "memberId": "female-older-sarcopenic",
+      "profile": { "ageYears": 72, "sex": "female", "heightCm": 158.0, "weightKg": 62.0, "bmi": 24.8 },
+      "source": "Synthetic DXA-style demo sample",
+      "bodyComposition": {
+        "total": { "fatMassG": 24200, "leanMassG": 35000, "percentFat": 39.0 },
+        "regions": {
+          "head": { "fatMassG": 1100, "leanMassG": 3100, "percentFat": 26.2 },
+          "left_arm": { "fatMassG": 1250, "leanMassG": 1850, "percentFat": 40.3 },
+          "right_arm": { "fatMassG": 1280, "leanMassG": 1900, "percentFat": 40.3 },
+          "trunk": { "fatMassG": 12320, "leanMassG": 19000, "percentFat": 39.3 },
+          "left_leg": { "fatMassG": 4070, "leanMassG": 4550, "percentFat": 47.2 },
+          "right_leg": { "fatMassG": 4180, "leanMassG": 4600, "percentFat": 47.6 }
+        }
+      }
+    }
+  ]
+}

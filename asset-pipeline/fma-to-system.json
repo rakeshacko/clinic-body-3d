@@ -1,0 +1,87 @@
+{
+  "note": "FMA structure ID -> body system. IDs are BodyParts3D STL basenames (assets/BodyParts3D_data/stl/<id>.stl), cross-checked against parts_list_e.txt names and confirmed present in the repo. Extensible: add IDs to a system's array; 01_fetch fetches them, 03_build_glb groups+exports them as system_<id>.glb. Skeletal carries a curated representative subset of major structures.",
+  "source": "Kevin-Mattheus-Moerman/BodyParts3D @ main, assets/BodyParts3D_data",
+  "systems": {
+    "cardiovascular": [
+      { "fma": "FMA7274", "name": "wall of heart" },
+      { "fma": "FMA7234", "name": "tricuspid valve" },
+      { "fma": "FMA7235", "name": "mitral valve" },
+      { "fma": "FMA7246", "name": "pulmonary valve" },
+      { "fma": "FMA7260", "name": "anterior papillary muscle of right ventricle" },
+      { "fma": "FMA7261", "name": "posterior papillary muscle of right ventricle" },
+      { "fma": "FMA7262", "name": "septal papillary muscle of right ventricle" },
+      { "fma": "FMA7266", "name": "posterior papillary muscle of left ventricle" },
+      { "fma": "FMA3736", "name": "ascending aorta" },
+      { "fma": "FMA3768", "name": "arch of aorta" },
+      { "fma": "FMA3784", "name": "descending aorta" },
+      { "fma": "FMA66326", "name": "pulmonary artery" },
+      { "fma": "FMA4720", "name": "superior vena cava" },
+      { "fma": "FMA10951", "name": "inferior vena cava" },
+      { "fma": "FMA4751", "name": "right brachiocephalic vein" },
+      { "fma": "FMA4761", "name": "left brachiocephalic vein" },
+      { "fma": "FMA3932nsn", "name": "brachiocephalic artery" },
+      { "fma": "FMA3941", "name": "right common carotid artery" },
+      { "fma": "FMA4058", "name": "left common carotid artery" },
+      { "fma": "FMA3953", "name": "right subclavian artery" },
+      { "fma": "FMA4694", "name": "left subclavian artery" }
+    ],
+    "respiratory": [
+      { "fma": "FMA7394", "name": "trachea" },
+      { "fma": "FMA7409", "name": "bronchus" },
+      { "fma": "FMA7333", "name": "upper lobe of right lung" },
+      { "fma": "FMA7337", "name": "lower lobe of right lung" },
+      { "fma": "FMA7383", "name": "middle lobe of lung" },
+      { "fma": "FMA7370", "name": "upper lobe of left lung" },
+      { "fma": "FMA7371", "name": "lower lobe of left lung" }
+    ],
+    "digestive": [
+      { "fma": "FMA7131", "name": "esophagus" },
+      { "fma": "FMA7148", "name": "stomach" },
+      { "fma": "FMA7197", "name": "liver" },
+      { "fma": "FMA7202", "name": "gallbladder" },
+      { "fma": "FMA7196", "name": "spleen" },
+      { "fma": "FMA7206", "name": "duodenum" },
+      { "fma": "FMA7207", "name": "jejunum" },
+      { "fma": "FMA7208", "name": "ileum" },
+      { "fma": "FMA14543nsn", "name": "colon" }
+    ],
+    "endocrine": [
+      { "fma": "FMA13889", "name": "pituitary gland" },
+      { "fma": "FMA15629", "name": "right adrenal gland" },
+      { "fma": "FMA15630", "name": "left adrenal gland" },
+      { "fma": "FMA7198nsn", "name": "pancreas" }
+    ],
+    "urinary": [
+      { "fma": "FMA7204", "name": "right kidney" },
+      { "fma": "FMA7205", "name": "left kidney" },
+      { "fma": "FMA15571", "name": "right ureter" },
+      { "fma": "FMA15572", "name": "left ureter" },
+      { "fma": "FMA15900", "name": "urinary bladder" },
+      { "fma": "FMA19667", "name": "urethra" }
+    ],
+    "nervous": [
+      { "fma": "FMA61822", "name": "white matter structure of cerebral hemisphere" },
+      { "fma": "FMA67944", "name": "cerebellum" },
+      { "fma": "FMA67943", "name": "pons" },
+      { "fma": "FMA62004", "name": "medulla oblongata" },
+      { "fma": "FMA62394", "name": "peduncle of midbrain" },
+      { "fma": "FMA72924", "name": "right fornix of forebrain" },
+      { "fma": "FMA72925", "name": "left fornix of forebrain" }
+    ],
+    "skeletal": [
+      { "fma": "FMA52735", "name": "occipital bone" },
+      { "fma": "FMA52734", "name": "frontal bone" },
+      { "fma": "FMA52736", "name": "sphenoid bone" },
+      { "fma": "FMA52748", "name": "mandible" },
+      { "fma": "FMA52749", "name": "hyoid bone" },
+      { "fma": "FMA12521", "name": "third cervical vertebra" },
+      { "fma": "FMA12525", "name": "seventh cervical vertebra" },
+      { "fma": "FMA10014", "name": "ninth thoracic vertebra" },
+      { "fma": "FMA10037", "name": "tenth thoracic vertebra" },
+      { "fma": "FMA10059", "name": "eleventh thoracic vertebra" },
+      { "fma": "FMA10081", "name": "twelfth thoracic vertebra" },
+      { "fma": "FMA16202", "name": "sacrum" },
+      { "fma": "FMA7487", "name": "body of sternum" }
+    ]
+  }
+}

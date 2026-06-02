@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Anny · DXA-driven body</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0c1014; color: #d6e2e6;
+    font: 13px/1.4 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  #app { position: fixed; inset: 0; }
+  .panel { position: fixed; top: 14px; max-height: calc(100% - 28px); overflow-y: auto;
+    padding: 14px 16px; background: rgba(12,20,26,.82); backdrop-filter: blur(8px);
+    border: 1px solid #1f3037; border-radius: 12px; }
+  #panel { left: 14px; width: 268px; }
+  #dxa { right: 14px; width: 300px; }
+  h1 { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: #6fb7c4;
+    margin: 0 0 4px; font-weight: 600; }
+  .sub { color: #5b7b83; font-size: 11px; margin-bottom: 10px; }
+  .grp { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #4f7b86;
+    margin: 14px 0 6px; }
+  select { width: 100%; padding: 7px 8px; margin-bottom: 4px; background: #102129; color: #cfe6ef;
+    border: 1px solid #244a55; border-radius: 8px; font: inherit; }
+  .row { margin: 9px 0; }
+  .row label { display: flex; justify-content: space-between; margin-bottom: 3px; color: #a7c8d0; }
+  .row .ends { display: flex; justify-content: space-between; color: #4f6e76; font-size: 10px; }
+  input[type=range] { width: 100%; accent-color: #46ccea; margin: 2px 0 0; }
+  .val { color: #7fd6ea; font-variant-numeric: tabular-nums; }
+  button { margin-top: 12px; width: 100%; padding: 7px; background: #15323b; color: #bfe6ef;
+    border: 1px solid #244a55; border-radius: 8px; cursor: pointer; }
+  .kv { display: flex; justify-content: space-between; padding: 3px 0; color: #b6cdd4;
+    border-bottom: 1px solid #15242b; }
+  .kv span:first-child { color: #6f9aa4; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+  th { text-align: left; color: #5f8893; font-weight: 500; padding: 3px 4px; border-bottom: 1px solid #213840; }
+  td { padding: 3px 4px; color: #c2d6dc; font-variant-numeric: tabular-nums; }
+  .chip { display: inline-block; min-width: 44px; text-align: center; padding: 1px 6px; border-radius: 6px;
+    color: #07110f; font-weight: 600; font-size: 11px; }
+  #status { position: fixed; bottom: 12px; left: 14px; color: #5b7b83; font-size: 11px; }
+  #err { position: fixed; bottom: 12px; left: 14px; right: 14px; color: #ff9a9a; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="panel" class="panel">
+  <h1>Anny body</h1>
+  <div class="sub">DXA → parametric model</div>
+  <select id="member"><option value="">— manual —</option></select>
+  <div id="measured" class="sub" style="margin:8px 0 0;color:#7fd6ea;font-variant-numeric:tabular-nums"></div>
+  <div id="sliders"></div>
+  <button id="reset">Reset to neutral</button>
+</div>
+<div id="dxa" class="panel"><div class="sub">select a member to load a DXA scan</div></div>
+<div id="status">loading Anny…</div>
+<div id="err"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const statusEl = document.getElementById('status'), errEl = document.getElementById('err');
+const dxaEl = document.getElementById('dxa'), memberEl = document.getElementById('member');
+const fail = (m) => { errEl.textContent = 'ERROR: ' + m; console.error(m); };
+
+const PHENO_ENDS = { gender:['male','female'], age:['baby','old'], muscle:['low','high'],
+  weight:['thin','heavy'], height:['short','tall'], proportions:['uncommon','ideal'] };
+const AGE_ANCHORS = [
+  [0.00, 0], [0.05, 1], [0.215, 4], [0.415, 11],
+  [0.67, 16], [0.77, 18], [0.83, 64], [1.00, 110],
+];
+const DEMO_LOCALS = [
+  'measure-waist-circ-incr', 'measure-hips-circ-incr', 'measure-thigh-circ-incr',
+  'measure-upperarm-circ-incr', 'torso-scale-horiz-incr', 'torso-scale-depth-incr',
+  'measure-underbust-circ-incr', 'measure-frontchest-dist-incr', 'hip-scale-depth-incr',
+  'hip-scale-horiz-incr', 'hip-trans-forward', 'pelvis-tone-incr', 'stomach-navel-out',
+  'stomach-pregnant-incr', 'buttocks-volume-incr', 'l-upperleg-fat-incr', 'r-upperleg-fat-incr',
+  'l-upperarm-fat-incr', 'r-upperarm-fat-incr', 'measure-bust-circ-incr', 'breast-volume-vert-up',
+];
+
+// ---------- three setup ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+document.getElementById('app').appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0c1014);
+const camera = new THREE.PerspectiveCamera(35, innerWidth/innerHeight, 0.01, 100);
+camera.position.set(0, 1.0, 3.2);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.target.set(0, 0.95, 0);
+scene.add(new THREE.HemisphereLight(0xcfeef6, 0x141a1e, 1.0));
+const key = new THREE.DirectionalLight(0xffffff, 2.0); key.position.set(2,4,3); scene.add(key);
+const fillL = new THREE.DirectionalLight(0x9fc6ff, 0.7); fillL.position.set(-3,2,-2); scene.add(fillL);
+scene.add(new THREE.GridHelper(6, 12, 0x1c2a30, 0x16222a));
+const mat = new THREE.MeshStandardMaterial({ color: 0xd7b69c, roughness: 0.72, side: THREE.DoubleSide });
+const geo = new THREE.BufferGeometry();
+const mesh = new THREE.Mesh(geo, mat); mesh.rotation.x = -Math.PI/2; scene.add(mesh);
+
+let PHENO = [], LOCALS = [], MEMBERS = [], FITTED = {}, framed = false, FACES32 = null;
+const values = {};
+function ageToAnny(years) {
+  if (years <= AGE_ANCHORS[0][1]) return AGE_ANCHORS[0][0];
+  for (let i = 1; i < AGE_ANCHORS.length; i++) {
+    const [a1, y1] = AGE_ANCHORS[i], [a0, y0] = AGE_ANCHORS[i - 1];
+    if (years <= y1) return a0 + (a1 - a0) * ((years - y0) / (y1 - y0));
+  }
+  const last = AGE_ANCHORS[AGE_ANCHORS.length - 1];
+  return last[0];
+}
+function annyToAge(v) {
+  if (v <= AGE_ANCHORS[0][0]) return AGE_ANCHORS[0][1];
+  for (let i = 1; i < AGE_ANCHORS.length; i++) {
+    const [a1, y1] = AGE_ANCHORS[i], [a0, y0] = AGE_ANCHORS[i - 1];
+    if (v <= a1) return y0 + (y1 - y0) * ((v - a0) / (a1 - a0));
+  }
+  return AGE_ANCHORS[AGE_ANCHORS.length - 1][1];
+}
+function fmt(k, v) {                                    // 0..1 param -> human-readable
+  const male = (values.gender ?? 0.5) < 0.5;           // Anny: gender 1 = female, 0 = male
+  if (k === 'gender') return v < 0.45 ? 'male' : v > 0.55 ? 'female' : 'androgyn';
+  if (k === 'age') return Math.round(annyToAge(v)) + ' yr';
+  if (k === 'weight') { const lo = male?19:18.5, hi = male?36:38; return 'BMI shape ' + (lo + v*(hi-lo)).toFixed(1); }
+  if (k === 'muscle') { const lo = male?6:5, hi = male?12.5:11; return 'ALMI ' + (lo + v*(hi-lo)).toFixed(1); }
+  if (k === 'height') return 'height fit ' + (+v).toFixed(2);
+  if (k === 'proportions') return v < 0.4 ? 'uncommon' : v > 0.6 ? 'ideal' : 'average';
+  return (+v).toFixed(2);
+}
+function measureBody() {                                // real height/mass/BMI from the actual mesh
+  const pos = geo.getAttribute('position').array;       // Anny-space verts, vertical = z (index 2)
+  let mn = 1e9, mx = -1e9;
+  for (let i = 2; i < pos.length; i += 3) { const z = pos[i]; if (z < mn) mn = z; if (z > mx) mx = z; }
+  const hM = mx - mn; let vol = 0;
+  for (let t = 0; FACES32 && t < FACES32.length; t += 3) {
+    const a = FACES32[t]*3, b = FACES32[t+1]*3, c = FACES32[t+2]*3;
+    vol += pos[a]*(pos[b+1]*pos[c+2]-pos[b+2]*pos[c+1]) + pos[a+1]*(pos[b+2]*pos[c]-pos[b]*pos[c+2]) + pos[a+2]*(pos[b]*pos[c+1]-pos[b+1]*pos[c]);
+  }
+  const massKg = Math.abs(vol)/6 * 1040;                // body tissue density ~1.01 g/cm³
+  return { hCm: hM*100, massKg, bmi: massKg/(hM*hM) };
+}
+const findLocal = (rx) => LOCALS.find(l => rx.test(l));
+const getBuf = async (u) => { const r = await fetch(u); if (!r.ok) throw new Error(u+' '+r.status); return r.arrayBuffer(); };
+
+async function boot() {
+  try {
+    const meta = await (await fetch('/labels')).json();
+    PHENO = meta.phenotypes; LOCALS = meta.locals;
+    FACES32 = new Uint32Array(await getBuf('/faces'));
+    geo.setIndex(new THREE.BufferAttribute(FACES32, 1));
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(meta.vertexCount*3), 3));
+    buildSliders();
+    MEMBERS = (await (await fetch('/members')).json()).members;
+    FITTED = await (await fetch('/fitted')).json();   // precomputed rigorous DEXA→Anny params
+    for (const m of MEMBERS) { const o = document.createElement('option'); o.value = m.memberId; o.textContent = m.memberId; memberEl.appendChild(o); }
+    memberEl.onchange = () => { const m = MEMBERS.find(x => x.memberId === memberEl.value); if (m) applyMember(m); };
+    await update();
+    statusEl.textContent = `Anny: ${meta.vertexCount.toLocaleString()} verts · pick a member or drag sliders · orbit to inspect`;
+  } catch (e) { fail(e.message || e); }
+}
+
+// ---------- sliders ----------
+function setVal(k, v) {
+  values[k] = v;
+  const inp = [...document.querySelectorAll('#sliders input')].find(i => i.dataset.key === k);
+  if (inp) inp.value = v;
+  const lab = document.getElementById('v_'+k); if (lab) lab.textContent = fmt(k, v);
+}
+function slider(key, min, max, def, ends) {
+  values[key] = def;
+  const row = document.createElement('div'); row.className = 'row';
+  row.innerHTML = `<label><span>${key}</span><span class="val" id="v_${key}">${fmt(key, def)}</span></label>`;
+  const inp = document.createElement('input');
+  inp.type='range'; inp.min=min; inp.max=max; inp.step=0.01; inp.value=def; inp.dataset.key=key;
+  inp.oninput = () => { values[key] = parseFloat(inp.value);
+    document.getElementById('v_'+key).textContent = fmt(key, values[key]); scheduleUpdate(); };
+  row.appendChild(inp);
+  if (ends) { const e=document.createElement('div'); e.className='ends';
+    e.innerHTML=`<span>${ends[0]}</span><span>${ends[1]}</span>`; row.appendChild(e); }
+  return row;
+}
+function buildSliders() {
+  const wrap = document.getElementById('sliders');
+  const core = ['gender','age','weight','muscle','height','proportions'];
+  const g1 = document.createElement('div'); g1.className='grp'; g1.textContent='Phenotype (whole body)'; wrap.appendChild(g1);
+  for (const k of core) if (PHENO.includes(k)) wrap.appendChild(slider(k, 0, 1, 0.5, PHENO_ENDS[k]));
+  const locals = DEMO_LOCALS.filter(l => LOCALS.includes(l));
+  if (locals.length) {
+    const g2 = document.createElement('div'); g2.className='grp'; g2.textContent='Local shape'; wrap.appendChild(g2);
+    for (const k of locals) wrap.appendChild(slider(k, 0, 1, 0, null));
+  }
+}
+
+// ---------- DXA -> Anny mapping ----------
+function norm(x, lo, hi) { return clamp((x - lo) / (hi - lo), 0, 1); }
+function putLocal(locals, key, value) {
+  if (LOCALS.includes(key) && value > 0.015) locals[key] = +clamp(value, 0, 1).toFixed(2);
+}
+function dxaShapeTargets(m, centrality) {
+  const p = m.profile, male = p.sex === 'male';
+  const waist = male
+    ? 76 + 1.8 * Math.max(0, p.bmi - 20) + 6 * centrality
+    : 68 + 1.45 * Math.max(0, p.bmi - 20) + 4 * centrality;
+  const abdomenDepth = male
+    ? 22 + 0.7 * Math.max(0, p.bmi - 22) + 2.8 * centrality
+    : 20 + 0.55 * Math.max(0, p.bmi - 22) + 2 * centrality;
+  return { waist, abdomenDepth, centrality };
+}
+function dxaToAnny(m) {
+  const p = m.profile, T = m.bodyComposition.total, R = m.bodyComposition.regions;
+  const htM = p.heightCm/100, male = p.sex === 'male';
+  const gender = male ? 0 : 1;
+  const age = ageToAnny(p.ageYears);
+  const fatNorm = norm(T.percentFat, male ? 10 : 18, male ? 34 : 44);
+  const bmiNorm = norm(p.bmi, male ? 19 : 18.5, male ? 36 : 38);
+  const weight = clamp(0.08 + 0.82 * (0.58 * bmiNorm + 0.42 * fatNorm), 0.04, 0.95);
+  const appLean = (R.left_arm.leanMassG+R.right_arm.leanMassG+R.left_leg.leanMassG+R.right_leg.leanMassG)/1000;
+  const almi = appLean/(htM*htM);
+  // DXA lean mass is not the same as visible muscle definition; damp strongly
+  // under high adiposity so high-BMI samples do not become bodybuilder-shaped.
+  const muscle = clamp(norm(almi, male ? 6 : 5, male ? 12.5 : 11) * (1 - 0.65 * Math.pow(fatNorm, 1.25)), 0.03, 0.82);
+  const armPf = (R.left_arm.percentFat + R.right_arm.percentFat)/2;
+  const legPf = (R.left_leg.percentFat + R.right_leg.percentFat)/2;
+  const trunkPf = R.trunk.percentFat;
+  const limbPf = (armPf + legPf) / 2;
+  const arm = norm(armPf, male ? 16 : 24, male ? 44 : 50);
+  const leg = norm(legPf, male ? 16 : 24, male ? 44 : 50);
+  const trunk = norm(trunkPf, male ? 18 : 25, male ? 44 : 50);
+  const trunkDelta = norm(trunkPf - T.percentFat + 8, 0, 16);
+  const legDelta = norm(legPf - T.percentFat + 8, 0, 16);
+  const centrality = norm(trunkPf - limbPf + 4, 0, 12);
+  const locals = {};
+  putLocal(locals, 'measure-upperarm-circ-incr', 0.08 + 0.28 * arm);
+  putLocal(locals, 'l-upperarm-fat-incr', 0.05 + 0.30 * arm);
+  putLocal(locals, 'r-upperarm-fat-incr', 0.05 + 0.30 * arm);
+  putLocal(locals, 'l-lowerarm-fat-incr', 0.03 + 0.18 * arm);
+  putLocal(locals, 'r-lowerarm-fat-incr', 0.03 + 0.18 * arm);
+  putLocal(locals, 'measure-thigh-circ-incr', 0.08 + 0.36 * leg);
+  putLocal(locals, 'l-upperleg-fat-incr', 0.06 + 0.34 * leg);
+  putLocal(locals, 'r-upperleg-fat-incr', 0.06 + 0.34 * leg);
+  putLocal(locals, 'l-lowerleg-fat-incr', 0.04 + 0.22 * leg);
+  putLocal(locals, 'r-lowerleg-fat-incr', 0.04 + 0.22 * leg);
+  putLocal(locals, 'buttocks-volume-incr', 0.10 + (male ? 0.22 : 0.34) * legDelta);
+  putLocal(locals, 'measure-waist-circ-incr', 0.06 + 0.42 * trunk);
+  putLocal(locals, 'measure-hips-circ-incr', 0.08 + (male ? 0.30 : 0.46) * legDelta);
+  putLocal(locals, 'measure-underbust-circ-incr', 0.04 + 0.24 * trunk);
+  putLocal(locals, 'measure-frontchest-dist-incr', 0.03 + 0.18 * trunk);
+  putLocal(locals, 'torso-scale-horiz-incr', 0.06 + 0.30 * trunk);
+  putLocal(locals, 'torso-scale-depth-incr', 0.04 + 0.36 * trunkDelta);
+  putLocal(locals, 'hip-scale-depth-incr', 0.04 + 0.28 * Math.max(trunkDelta, centrality * 0.65));
+  putLocal(locals, 'hip-scale-horiz-incr', 0.04 + (male ? 0.16 : 0.26) * legDelta);
+  putLocal(locals, 'hip-trans-forward', 0.03 + 0.16 * centrality);
+  putLocal(locals, 'pelvis-tone-incr', 0.02 + 0.16 * centrality);
+  putLocal(locals, 'stomach-navel-out', 0.04 + 0.30 * trunkDelta);
+  putLocal(locals, 'stomach-pregnant-incr', 0.02 + (male ? 0.18 : 0.25) * centrality * trunk);
+  if (!male) {
+    putLocal(locals, 'measure-bust-circ-incr', 0.12 + 0.34 * trunk);
+    putLocal(locals, 'breast-volume-vert-up', 0.18 + 0.24 * fatNorm);
+  }
+  return { gender, age, weight, muscle, height: 0.5, proportions: 0.5, locals,
+    targets: dxaShapeTargets(m, centrality), debug: { arm, leg, trunk, almi, centrality } };
+}
+
+async function applyMember(m) {
+  const f = FITTED[m.memberId] || dxaToAnny(m);
+  for (const k of PHENO) setVal(k, f[k] != null ? f[k] : 0.5);   // gender/age/weight/muscle/height/proportions
+  for (const k of LOCALS) values[k] = 0;
+  for (const [k, v] of Object.entries(f.locals || {})) setVal(k, v);   // fitted girth locals
+  document.querySelectorAll('#sliders input').forEach(i => { i.value = values[i.dataset.key];
+    const lab = document.getElementById('v_'+i.dataset.key); if (lab) lab.textContent = fmt(i.dataset.key, values[i.dataset.key]); });
+  const al = document.getElementById('v_age'); if (al) al.textContent = m.profile.ageYears + ' yr';   // true chronological age (Anny's age axis is nonlinear)
+  renderDxa(m, f);
+  await update();
+}
+
+function chip(pf) { const t = clamp((pf-15)/30, 0, 1); const h = Math.round(130*(1-t));
+  return `<span class="chip" style="background:hsl(${h} 60% 52%)">${pf.toFixed(1)}%</span>`; }
+function renderDxa(m, f) {
+  const p = m.profile, T = m.bodyComposition.total, R = m.bodyComposition.regions;
+  const rows = ['head','left_arm','right_arm','trunk','left_leg','right_leg'].map(k => { const r = R[k];
+    return `<tr><td>${k.replace('_',' ')}</td><td>${(r.fatMassG/1000).toFixed(1)}</td><td>${(r.leanMassG/1000).toFixed(1)}</td><td>${chip(r.percentFat)}</td></tr>`; }).join('');
+  dxaEl.innerHTML = `
+    <h1>DXA scan</h1><div class="sub">${m.memberId}</div>
+    <div class="kv"><span>age · sex</span><span>${p.ageYears} · ${p.sex}</span></div>
+    <div class="kv"><span>height · weight</span><span>${p.heightCm} cm · ${p.weightKg} kg</span></div>
+    <div class="kv"><span>BMI</span><span>${p.bmi}</span></div>
+    <div class="kv"><span>body fat</span><span>${chip(T.percentFat)}</span></div>
+    <div class="kv"><span>fat · lean</span><span>${(T.fatMassG/1000).toFixed(1)} · ${(T.leanMassG/1000).toFixed(1)} kg</span></div>
+    <div class="grp">regional composition</div>
+    <table><thead><tr><th>region</th><th>fat</th><th>lean</th><th>%fat</th></tr></thead><tbody>${rows}</tbody></table>
+    ${f ? `<div class="grp">→ fitted to Anny (bounded visual)</div>
+    <div class="kv"><span>gender · age</span><span>${f.gender.toFixed(2)} · ${f.age.toFixed(2)}</span></div>
+    <div class="kv"><span>weight · muscle · height</span><span>${f.weight.toFixed(2)} · ${f.muscle.toFixed(2)} · ${f.height.toFixed(2)}</span></div>
+    ${f.achieved ? `<div class="kv"><span>achieved</span><span>${f.achieved.H} cm · ${f.achieved.kg} kg · BMI ${f.achieved.bmi}</span></div>` : ''}
+    ${f.achieved?.waist ? `<div class="kv"><span>waist · abdomen</span><span>${f.achieved.waist} · ${f.achieved.abdomenDepth} cm</span></div>` : ''}
+    ${f.targets?.waist ? `<div class="kv"><span>target waist · abdomen</span><span>${f.targets.waist} · ${f.targets.abdomenDepth} cm</span></div>` : ''}
+    <div class="kv"><span>vs DEXA</span><span>${p.heightCm} cm · ${p.weightKg} kg · BMI ${p.bmi}</span></div>` : ''}`;
+}
+
+// ---------- mesh update (single-flight) ----------
+let pending = false, inflight = false;
+function scheduleUpdate() { pending = true; if (!inflight) update(); }
+async function update() {
+  if (inflight) { pending = true; return; }
+  inflight = true; pending = false;
+  try {
+    const qs = Object.entries(values).filter(([,v]) => v !== 0 || true).map(([k,v]) => `${k}=${v}`).join('&');
+    const pos = new Float32Array(await getBuf('/mesh?'+qs));
+    const attr = geo.getAttribute('position'); attr.array.set(pos); attr.needsUpdate = true;
+    geo.computeVertexNormals();
+    if (!framed) { frame(); framed = true; }
+    const ms = measureBody();
+    const hl = document.getElementById('v_height'); if (hl) hl.textContent = Math.round(ms.hCm) + ' cm';
+    const md = document.getElementById('measured'); if (md) md.textContent = `measured ≈ ${Math.round(ms.hCm)} cm · ${Math.round(ms.massKg)} kg · BMI ${ms.bmi.toFixed(1)}`;
+  } catch (e) { fail(e.message || e); }
+  inflight = false;
+  if (pending) update();
+}
+function frame() {
+  const box = new THREE.Box3().setFromObject(mesh);
+  const c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
+  controls.target.copy(c);
+  camera.position.set(c.x, c.y + s.y*0.08, c.z + Math.max(s.y, s.x)*1.9);
+  camera.near = 0.01; camera.far = 100; camera.updateProjectionMatrix();
+}
+
+document.getElementById('reset').onclick = () => {
+  memberEl.value = '';
+  document.querySelectorAll('#sliders input').forEach(inp => {
+    const k = inp.dataset.key, def = PHENO.includes(k) ? 0.5 : 0;
+    inp.value = def; values[k] = def; document.getElementById('v_'+k).textContent = fmt(k, def);
+  });
+  for (const k of LOCALS) values[k] = 0;
+  dxaEl.innerHTML = '<div class="sub">select a member to load a DXA scan</div>';
+  scheduleUpdate();
+};
+
+addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight); });
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+boot();
+</script>
+</body>
+</html>

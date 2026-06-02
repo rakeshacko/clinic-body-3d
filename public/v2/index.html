@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>clinic-body-3d · v2 coherent-body preview</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #060a0e; color: #cfe6ea;
+    font: 13px/1.4 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  #app { position: fixed; inset: 0; }
+  #panel { position: fixed; top: 16px; left: 16px; width: 230px; padding: 14px 16px;
+    background: rgba(10,18,24,.72); backdrop-filter: blur(8px); border: 1px solid #1d2f36;
+    border-radius: 12px; user-select: none; }
+  #panel h1 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: #6fb7c4; margin: 0 0 10px; font-weight: 600; }
+  .row { margin: 12px 0; }
+  .row label { display: flex; justify-content: space-between; margin-bottom: 5px; color: #9fc4cc; }
+  input[type=range] { width: 100%; accent-color: #46ccea; }
+  .sys { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
+  .sys input { accent-color: #46ccea; }
+  .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .hint { color: #5b7b83; margin-top: 12px; font-size: 11px; }
+  #status { position: fixed; bottom: 14px; left: 16px; color: #5b7b83; font-size: 11px; }
+  #err { position: fixed; inset: auto 16px 16px; max-width: 560px; color: #ff9a9a;
+    white-space: pre-wrap; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="panel">
+  <h1>v2 coherent body</h1>
+  <div class="row">
+    <label>body weight <span id="wv">0.50</span></label>
+    <input id="weight" type="range" min="0" max="110" value="50" />
+  </div>
+  <div class="row">
+    <label>skin opacity <span id="ov">0.16</span></label>
+    <input id="opacity" type="range" min="0" max="60" value="16" />
+  </div>
+  <div class="row" id="systems"></div>
+  <div class="hint">drag to orbit · scroll to zoom</div>
+</div>
+<div id="status">loading…</div>
+<div id="err"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+const SYSTEMS = [
+  ['cardiovascular', 0xe23b3b], ['respiratory', 0x46ccea], ['digestive', 0xf2952e],
+  ['endocrine', 0xdf4dd8], ['urinary', 0xf4db40], ['nervous', 0x7385f5], ['skeletal', 0xeae6d2],
+];
+const statusEl = document.getElementById('status');
+const errEl = document.getElementById('err');
+const fail = (m) => { errEl.textContent = 'ERROR: ' + m; console.error(m); };
+window.addEventListener('error', e => fail(e.message));
+
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060a0e);
+scene.fog = new THREE.Fog(0x060a0e, 4.0, 8.5);
+
+const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 0.1, 50);
+camera.position.set(0, 0, 3.6);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.target.set(0, 0, 0);
+
+scene.add(new THREE.HemisphereLight(0xbfe9f2, 0x0a1418, 0.9));
+const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(2, 3, 4); scene.add(key);
+const rim = new THREE.DirectionalLight(0x88c0ff, 0.8); rim.position.set(-3, 1, -2); scene.add(rim);
+
+const draco = new DRACOLoader();
+draco.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+const loader = new GLTFLoader();
+loader.setDRACOLoader(draco);
+const load = (url) => new Promise((res, rej) => loader.load(url, g => res(g), undefined, rej));
+
+const sysMeshes = {};
+let skinMat = null, skinMesh = null;
+
+function skinMaterial() {
+  return new THREE.MeshPhysicalMaterial({
+    color: 0x9bdcee, roughness: 0.35, metalness: 0, transparent: true, opacity: 0.16,
+    depthWrite: false, side: THREE.DoubleSide,
+  });
+}
+function organMaterial(hex) {
+  const c = new THREE.Color(hex);
+  return new THREE.MeshStandardMaterial({
+    color: c.clone().multiplyScalar(0.42), emissive: c.clone(), emissiveIntensity: 0.95,
+    roughness: 0.5, metalness: 0, transparent: true, opacity: 1, depthWrite: false,
+  });
+}
+
+async function boot() {
+  try {
+    // skin (with weight morph target) first
+    const skinG = await load('./models/body_shell_morph.glb');
+    skinMat = skinMaterial();
+    skinG.scene.traverse(o => { if (o.isMesh) { o.material = skinMat; o.renderOrder = 10;
+      o.frustumCulled = false; skinMesh = o; } });
+    scene.add(skinG.scene);
+
+    for (const [id, hex] of SYSTEMS) {
+      const g = await load(`./models/system_${id}.glb`);
+      g.scene.traverse(o => {
+        if (!o.isMesh) return;
+        for (const m of (Array.isArray(o.material) ? o.material : [o.material])) {
+          if (!m) continue;
+          // keep Z-Anatomy's OWN base colour; replace its flat white atlas-emission
+          // with a faint self-glow in the material's own colour so it still reads
+          // through the frosted skin — no artificial system tint.
+          if (m.emissive) { m.emissive.copy(m.color); m.emissiveIntensity = 0.16; }
+          m.depthWrite = true;
+        }
+        o.renderOrder = 1; o.frustumCulled = false;
+      });
+      sysMeshes[id] = g.scene; scene.add(g.scene);
+    }
+    statusEl.textContent = 'v2 · one Z-Anatomy body · skin + 7 systems · procedural weight morph';
+    buildSystemToggles();
+    applyWeight();
+  } catch (e) { fail(e.message || String(e)); }
+}
+
+function buildSystemToggles() {
+  const wrap = document.getElementById('systems');
+  for (const [id, hex] of SYSTEMS) {
+    const el = document.createElement('label'); el.className = 'sys';
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true;
+    cb.onchange = () => { if (sysMeshes[id]) sysMeshes[id].visible = cb.checked; };
+    const dot = document.createElement('span'); dot.className = 'dot';
+    dot.style.background = '#' + hex.toString(16).padStart(6, '0');
+    const t = document.createElement('span'); t.textContent = id;
+    el.append(cb, dot, t); wrap.appendChild(el);
+  }
+}
+
+const weightEl = document.getElementById('weight');
+const wv = document.getElementById('wv');
+function applyWeight() {
+  const v = weightEl.value / 100;           // 0..1.5
+  wv.textContent = v.toFixed(2);
+  if (skinMesh && skinMesh.morphTargetInfluences) skinMesh.morphTargetInfluences[0] = v;
+}
+weightEl.oninput = applyWeight;
+
+const opacityEl = document.getElementById('opacity');
+const ov = document.getElementById('ov');
+opacityEl.oninput = () => { const v = opacityEl.value / 100; ov.textContent = v.toFixed(2);
+  if (skinMat) skinMat.opacity = v; };
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+boot();
+</script>
+</body>
+</html>

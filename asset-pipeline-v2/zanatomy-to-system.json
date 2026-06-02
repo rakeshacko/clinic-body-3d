@@ -1,0 +1,51 @@
+{
+  "_doc": "Maps the single Z-Anatomy body (sources/z-anatomy Startup.blend) to our 7 systems + skin. Authored from a headless dump of collection contents (see scripts/extract_core.py). Everything is extracted from ONE body with ONE normalize transform, so alignment is guaranteed by construction. Budgets here are spike-level (offline coherence render); paring to the app's 150k total is a later curation pass.",
+
+  "target_height": 1.8,
+
+  "drop_suffixes": [".j", ".i", ".g"],
+  "_drop_suffixes_doc": ".l/.r are left/right (kept). .j/.i are 2-vertex landmark/junction helpers; .g are label-group anchors. All have 0 tris.",
+
+  "repro_exclude_substrings": [
+    "penis", "cavernosum", "spongiosum", "glans", "prostate", "seminal",
+    "testis", "epididym", "ductus deferens", "ejaculatory duct",
+    "genital", "scrotum", "urogenital"
+  ],
+  "_repro_doc": "No reproductive system in our 7, and genitalia are inappropriate for a clinic kiosk. Dropped everywhere.",
+
+  "artifact_exclude_substrings": ["ciliary body-curve"],
+  "_artifact_doc": "Construction/handle-broken curves in the atlas that tessellate to wild multi-meter extents. Dropped everywhere; a generous outlier-vertex clip in extract_core.py is the backstop for any others.",
+
+  "nc_exclude_substrings": [
+    "cochlea", "vestibul", "semicircular", "labyrinth", "tympan",
+    "malleus", "incus", "stapes", "auditory ossicle", "spiral organ",
+    "membranous ampulla", "utricle", "saccule", "endolymph", "perilymph", "scala "
+  ],
+  "_nc_doc": "Inner ear (Dundee, CC-BY-NC-SA) must be excluded for commercial use. Lives in the nervous/sense-organ collection.",
+
+  "systems": {
+    "skeletal":       { "collections": ["1: Skeletal system"], "budget": 80000 },
+    "cardiovascular": { "collections": ["5: Cardiovascular system"], "budget": 55000 },
+    "nervous":        { "collections": ["7: Nervous system & Sense organs"], "budget": 80000, "apply_nc_exclude": true },
+
+    "endocrine":   { "from": "8: Visceral systems", "budget": 20000,
+                     "include_substrings": ["suprarenal", "adrenal", "hypophysis", "pituitary", "pineal", "thyroid", "parathyroid"] },
+    "urinary":     { "from": "8: Visceral systems", "budget": 25000,
+                     "include_substrings": ["kidney", "renal", "ureter", "urethra", "bladder", "urinary"],
+                     "license_flag_substrings": ["kidney"],
+                     "_license_flag_doc": "Z-Anatomy kidney provenance is ambiguous (Lissie Cowley CC-BY-NC vs BodyParts3D CC-BY-SA). Included for the spike; verify/swap to a CC-BY-SA kidney before commercial use." },
+    "respiratory": { "from": "8: Visceral systems", "budget": 40000,
+                     "include_substrings": ["lung", "pulmon", "trachea", "bronch", "pleura", "epiglottis", "larynx", "laryng", "pharynx", "nasal", "nose", "paranasal sinus"] },
+    "digestive":   { "from": "8: Visceral systems", "budget": 50000,
+                     "include_substrings": ["liver", "hepat", "pancrea", "stomach", "gastric", "duoden", "jejun", "ileum", "colon", "caecum", "appendix", "omentum", "omental", "mesocol", "meso-append", "taenia", "gallbladder", "bile", "gingiva", "tongue", "palate", "uvula", "salivary", "parotid", "submandibular", "sublingual", "oesophag", "fauces"] }
+  },
+  "_visceral_priority": ["endocrine", "urinary", "respiratory", "digestive"],
+  "_visceral_priority_doc": "Collection 8 holds 4 systems mixed. Each object is assigned to the FIRST system whose include list matches, in this order. Endocrine before urinary so 'suprarenal' wins over the 'renal' substring.",
+
+  "skin": {
+    "collection": "9: Regions of human body",
+    "budget": 60000,
+    "exclude_substrings": ["hairs", "eyelash"],
+    "_doc": "299 surface-region patches that tile the whole body. Joined (minus hairs) = a frosted skin envelope co-registered with the organs. Patchwork topology (no single mesh) — fine as a shell, but see the skin/morph spike re: whether it can take outward body-type morphs."
+  }
+}
