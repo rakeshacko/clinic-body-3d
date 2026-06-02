@@ -232,7 +232,7 @@ export function computeSystemFit(
     case "cardiovascular":
       return { position: [0, yOffset - 0.02, internalDepthOffset], scale: [torsoX * 0.92, height * 0.86, chestDepth * 0.9] };
     case "respiratory":
-      return { position: [0, yOffset - 0.07, internalDepthOffset], scale: [torsoX * 0.94, torsoY * 0.78, chestDepth * 0.92] };
+      return { position: [0, yOffset - 0.03, internalDepthOffset], scale: [torsoX * 0.94, torsoY * 0.78, chestDepth * 0.92] };
     case "digestive":
       return {
         position: [0, pelvisOffset - 0.005, digestiveDepthOffset + abdomenForward * 0.35],

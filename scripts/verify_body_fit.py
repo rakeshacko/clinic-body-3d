@@ -182,7 +182,7 @@ def compute_system_fit(system_id: str, params: dict[str, float], tuning: dict[st
     if system_id == "cardiovascular":
         return Transform((0.0, y_offset - 0.02, internal_depth_offset), (torso_x * 0.92, height * 0.86, chest_depth * 0.9))
     if system_id == "respiratory":
-        return Transform((0.0, y_offset - 0.07, internal_depth_offset), (torso_x * 0.94, torso_y * 0.78, chest_depth * 0.92))
+        return Transform((0.0, y_offset - 0.03, internal_depth_offset), (torso_x * 0.94, torso_y * 0.78, chest_depth * 0.92))
     if system_id == "digestive":
         return Transform(
             (0.0, pelvis_offset - 0.005, digestive_depth_offset + abdomen_forward * 0.35),
