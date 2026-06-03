@@ -7,17 +7,35 @@ import { buildAnnyQuery, type BodyFitParams } from "../bodyFit";
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ANNY_URL = (import.meta.env.VITE_ANNY_URL ?? "http://localhost:8765").replace(/\/$/, "");
+export type BodyShellMaterialMode = "clinical" | "aura";
+const shellOpacity = (mode: BodyShellMaterialMode) => (mode === "aura" ? 0.42 : 0.18);
 
 /** Frosted-glass body envelope the lit systems sit inside. Fades in first in the reveal sequence. */
-export function BodyShell({ model }: { model: string }) {
+export function BodyShell({ model, materialMode = "clinical" }: { model: string; materialMode?: BodyShellMaterialMode }) {
   const useAnnyShell = useAppStore((s) => s.useAnnyShell);
   const bodyFit = useAppStore((s) => s.bodyFit);
 
-  if (useAnnyShell) return <AnnyBodyShell fallbackModel={model} params={bodyFit} />;
-  return <StaticBodyShell model={model} />;
+  if (useAnnyShell) return <AnnyBodyShell fallbackModel={model} params={bodyFit} materialMode={materialMode} />;
+  return <StaticBodyShell model={model} materialMode={materialMode} />;
 }
 
-function makeShellMaterial() {
+function makeShellMaterial(mode: BodyShellMaterialMode = "clinical") {
+  if (mode === "aura") {
+    return new MeshPhysicalMaterial({
+      color: "#bde7f2",
+      roughness: 0.82,
+      metalness: 0,
+      transmission: 0.72,
+      thickness: 1.05,
+      ior: 1.12,
+      attenuationColor: "#ffb9c9",
+      attenuationDistance: 1.9,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+  }
+
   return new MeshPhysicalMaterial({
     color: "#bfe2e6",
     roughness: 0.5,
@@ -33,7 +51,7 @@ function makeShellMaterial() {
   });
 }
 
-function StaticBodyShell({ model }: { model: string }) {
+function StaticBodyShell({ model, materialMode = "clinical" }: { model: string; materialMode?: BodyShellMaterialMode }) {
   const { scene } = useGLTF(model);
   const ref = useRef<Group>(null);
   const matRef = useRef<MeshPhysicalMaterial | null>(null);
@@ -41,20 +59,20 @@ function StaticBodyShell({ model }: { model: string }) {
 
   const cloned = useMemo(() => {
     const c = scene.clone(true);
-    const mat = makeShellMaterial();
+    const mat = makeShellMaterial(materialMode);
     c.traverse((o) => {
       if ((o as Mesh).isMesh) (o as Mesh).material = mat;
     });
     matRef.current = mat;
     return c;
-  }, [scene]);
+  }, [scene, materialMode]);
 
   useFrame((_, dt) => {
     const revealed = useAppStore.getState().revealed;
     const k = 1 - Math.pow(0.02, dt);
     revealRef.current = lerp(revealRef.current, revealed ? 1 : 0, k);
     const r = revealRef.current;
-    if (matRef.current) matRef.current.opacity = 0.18 * r;
+    if (matRef.current) matRef.current.opacity = shellOpacity(materialMode) * r;
     if (ref.current) ref.current.visible = r > 0.01;
   });
 
@@ -65,12 +83,18 @@ function StaticBodyShell({ model }: { model: string }) {
   );
 }
 
-function materialReveal(matRef: MutableRefObject<MeshPhysicalMaterial | null>, ref: MutableRefObject<Group | null>, revealRef: MutableRefObject<number>, dt: number) {
+function materialReveal(
+  matRef: MutableRefObject<MeshPhysicalMaterial | null>,
+  ref: MutableRefObject<Group | null>,
+  revealRef: MutableRefObject<number>,
+  dt: number,
+  materialMode: BodyShellMaterialMode,
+) {
   const revealed = useAppStore.getState().revealed;
   const k = 1 - Math.pow(0.02, dt);
   revealRef.current = lerp(revealRef.current, revealed ? 1 : 0, k);
   const r = revealRef.current;
-  if (matRef.current) matRef.current.opacity = 0.18 * r;
+  if (matRef.current) matRef.current.opacity = shellOpacity(materialMode) * r;
   if (ref.current) ref.current.visible = r > 0.01;
 }
 
@@ -135,7 +159,15 @@ function geometryFromAnny(facesBuffer: ArrayBuffer, verticesBuffer: ArrayBuffer)
   return geo;
 }
 
-function AnnyBodyShell({ fallbackModel, params }: { fallbackModel: string; params: BodyFitParams }) {
+function AnnyBodyShell({
+  fallbackModel,
+  params,
+  materialMode = "clinical",
+}: {
+  fallbackModel: string;
+  params: BodyFitParams;
+  materialMode?: BodyShellMaterialMode;
+}) {
   const ref = useRef<Group>(null);
   const matRef = useRef<MeshPhysicalMaterial | null>(null);
   const revealRef = useRef(0);
@@ -144,10 +176,10 @@ function AnnyBodyShell({ fallbackModel, params }: { fallbackModel: string; param
   const [failed, setFailed] = useState(false);
 
   const material = useMemo(() => {
-    const mat = makeShellMaterial();
+    const mat = makeShellMaterial(materialMode);
     matRef.current = mat;
     return mat;
-  }, []);
+  }, [materialMode]);
 
   useEffect(() => {
     let disposed = false;
@@ -178,14 +210,14 @@ function AnnyBodyShell({ fallbackModel, params }: { fallbackModel: string; param
 
   useEffect(() => () => geometry?.dispose(), [geometry]);
 
-  useFrame((_, dt) => materialReveal(matRef, ref, revealRef, dt));
+  useFrame((_, dt) => materialReveal(matRef, ref, revealRef, dt, materialMode));
 
-  if (failed && !geometry) return <StaticBodyShell model={fallbackModel} />;
+  if (failed && !geometry) return <StaticBodyShell model={fallbackModel} materialMode={materialMode} />;
 
   return (
     <group ref={ref}>
       {geometry && <mesh geometry={geometry} material={material} />}
-      {!geometry && <StaticBodyShell model={fallbackModel} />}
+      {!geometry && <StaticBodyShell model={fallbackModel} materialMode={materialMode} />}
     </group>
   );
 }

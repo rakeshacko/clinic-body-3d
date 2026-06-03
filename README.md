@@ -75,6 +75,7 @@ Command notes:
 
 ```txt
 /         Wall-screen kiosk view
+/anny-aura  Off-white Anny material lab with body-parameter controls
 /remote   Tablet/remote-control view
 ```
 
@@ -98,8 +99,9 @@ http://localhost:8765/
 ```
 
 When the main app's **Body fit** panel has "Anny shell" enabled, it fetches the generated
-outer-body mesh from `VITE_ANNY_URL`. If the Anny server is not running, the app falls back
-to the bundled static GLB shell.
+outer-body mesh from `VITE_ANNY_URL`. The `/anny-aura` route always requests the live Anny
+shell and exposes the body-shape parameters against a light volumetric material study. If
+the Anny server is not running, the app falls back to the bundled static GLB shell.
 
 It serves:
 
