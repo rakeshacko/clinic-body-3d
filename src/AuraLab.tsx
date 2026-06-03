@@ -1,7 +1,6 @@
 import { Suspense, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { AdaptiveDpr, OrbitControls } from "@react-three/drei";
-import { AdditiveBlending } from "three";
 import { Bloom, EffectComposer, SMAA } from "@react-three/postprocessing";
 import { KernelSize } from "postprocessing";
 import { BODY_FIT_PRESETS, type BodyFitParamKey } from "./bodyFit";
@@ -26,31 +25,12 @@ const BODY_PARAM_LABELS: Array<[BodyFitParamKey, string]> = [
 function AuraLights() {
   return (
     <>
-      <ambientLight intensity={1.5} color="#fff8ef" />
-      <directionalLight position={[-2.4, 2.8, 2.6]} intensity={2.1} color="#b9edff" />
-      <directionalLight position={[2.2, 1.4, 1.8]} intensity={1.8} color="#ff96ae" />
-      <pointLight position={[0.18, 0.58, 0.42]} intensity={2.2} color="#ffd55a" distance={1.4} />
-      <pointLight position={[-0.55, -0.28, 0.5]} intensity={1.35} color="#65cfff" distance={1.9} />
+      <ambientLight intensity={0.72} color="#fff6ee" />
+      <directionalLight position={[-2.4, 2.8, 2.6]} intensity={0.95} color="#9edfff" />
+      <directionalLight position={[2.2, 1.4, 1.8]} intensity={0.82} color="#ff8fa8" />
+      <pointLight position={[0.16, 0.62, 0.46]} intensity={0.8} color="#ffd665" distance={1.7} />
+      <pointLight position={[-0.52, -0.2, 0.5]} intensity={0.62} color="#6fd4ff" distance={2.2} />
     </>
-  );
-}
-
-function AuraGlow() {
-  return (
-    <group>
-      <mesh position={[0.14, 0.56, 0.22]} scale={[0.2, 0.3, 0.16]}>
-        <sphereGeometry args={[1, 48, 32]} />
-        <meshBasicMaterial color="#ffd45b" transparent opacity={0.32} depthWrite={false} blending={AdditiveBlending} />
-      </mesh>
-      <mesh position={[0.22, 0.51, 0.18]} scale={[0.18, 0.25, 0.14]}>
-        <sphereGeometry args={[1, 48, 32]} />
-        <meshBasicMaterial color="#ff7f95" transparent opacity={0.24} depthWrite={false} blending={AdditiveBlending} />
-      </mesh>
-      <mesh position={[-0.34, -0.18, 0.05]} scale={[0.48, 0.72, 0.2]}>
-        <sphereGeometry args={[1, 48, 32]} />
-        <meshBasicMaterial color="#72d8ff" transparent opacity={0.14} depthWrite={false} blending={AdditiveBlending} />
-      </mesh>
-    </group>
   );
 }
 
@@ -59,32 +39,31 @@ function AuraScene() {
     <div className="aura-canvas">
       <Canvas
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-        camera={{ position: [0, 0.08, 2.55], fov: 28, near: 0.1, far: 40 }}
+        camera={{ position: [0.05, 0.12, 4.15], fov: 28, near: 0.1, far: 40 }}
         dpr={[1, 2]}
       >
-        <fog attach="fog" args={["#fff7ef", 1.85, 5.2]} />
+        <fog attach="fog" args={["#fff7ef", 3.3, 7.2]} />
         <AdaptiveDpr />
         <AuraLights />
         <Suspense fallback={null}>
-          <group rotation={[0, -0.16, 0]} position={[0, -0.02, 0]}>
+          <group rotation={[0, -0.22, 0]} position={[0, -0.05, 0]}>
             <BodyShell model={SHELL_MODELS.neutral} materialMode="aura" />
-            <AuraGlow />
           </group>
         </Suspense>
         <OrbitControls
           makeDefault
           enablePan={false}
-          minDistance={1.75}
-          maxDistance={4.2}
-          target={[0, 0.03, 0]}
+          minDistance={3.0}
+          maxDistance={5.2}
+          target={[0, 0.05, 0]}
           autoRotate
-          autoRotateSpeed={0.28}
+          autoRotateSpeed={0.18}
         />
         <EffectComposer multisampling={0} enableNormalPass={false}>
           <Bloom
-            intensity={0.9}
-            luminanceThreshold={0.08}
-            luminanceSmoothing={0.55}
+            intensity={0.34}
+            luminanceThreshold={0.18}
+            luminanceSmoothing={0.7}
             mipmapBlur
             kernelSize={KernelSize.HUGE}
           />
