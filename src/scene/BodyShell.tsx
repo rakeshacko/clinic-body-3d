@@ -8,7 +8,7 @@ import { buildAnnyQuery, type BodyFitParams } from "../bodyFit";
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ANNY_URL = (import.meta.env.VITE_ANNY_URL ?? "http://localhost:8765").replace(/\/$/, "");
 export type BodyShellMaterialMode = "clinical" | "aura";
-const shellOpacity = (mode: BodyShellMaterialMode) => (mode === "aura" ? 0.58 : 0.18);
+const shellOpacity = (mode: BodyShellMaterialMode) => (mode === "aura" ? 1 : 0.18);
 
 /** Frosted-glass body envelope the lit systems sit inside. Fades in first in the reveal sequence. */
 export function BodyShell({ model, materialMode = "clinical" }: { model: string; materialMode?: BodyShellMaterialMode }) {
@@ -27,14 +27,14 @@ function makeShellMaterial(mode: BodyShellMaterialMode = "clinical") {
       emissiveIntensity: 0.08,
       roughness: 0.92,
       metalness: 0,
-      transmission: 0.08,
-      thickness: 0.28,
+      transmission: 0,
+      thickness: 0,
       ior: 1.12,
       attenuationColor: "#9acfe4",
       attenuationDistance: 2.6,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
+      transparent: false,
+      opacity: 1,
+      depthWrite: true,
     });
   }
 
